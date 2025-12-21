@@ -1,0 +1,3 @@
+if lol == 42
+	print("Hello, World!")
+end
