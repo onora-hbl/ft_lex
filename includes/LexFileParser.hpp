@@ -43,6 +43,8 @@ class LexFileParser {
 
 		bool parse();
 
+		void show() const;
+
 	private:
 		enum State {
 			DEFINITIONS,

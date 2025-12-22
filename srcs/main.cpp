@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 	if (!parser.parse()) {
 		return 1;
 	}
+	// parser.show();
 
 	return 0;
 }

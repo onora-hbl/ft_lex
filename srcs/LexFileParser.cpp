@@ -235,7 +235,6 @@ void LexFileParser::handleRuleLine(const std::string& line) {
 		currentRule.action += "\n" + line;
 	}
 	if (isActionFinished(currentRule.action)) {
-		std::cout << "Finished rule: pattern='" << currentRule.pattern << "', action='" << currentRule.action << "'" << std::endl;
 		_content.rules.push_back(currentRule);
 		currentRule = { "", "", {} };
 	}
@@ -243,4 +242,44 @@ void LexFileParser::handleRuleLine(const std::string& line) {
 
 void LexFileParser::handleUserSubroutineLine(const std::string& line) {
 	_content.userSubroutinesCode.push_back(line);
+}
+
+void LexFileParser::show() const {
+	std::cout << "Definitions Code:" << std::endl;
+	for (const auto& line : _content.definitionCode) {
+		std::cout << line << std::endl;
+	}
+	std::cout << "YYTEXT Type: " << (_content.yytextType == Content::ARRAY ? "ARRAY" : "POINTER") << std::endl;
+	std::cout << "Positions Size: " << _content.positionsSize << std::endl;
+	std::cout << "States Size: " << _content.statesSize << std::endl;
+	std::cout << "Transitions Size: " << _content.transitionsSize << std::endl;
+	std::cout << "Parse Tree Size: " << _content.parseTreeSize << std::endl;
+	std::cout << "Packed Character Classes Size: " << _content.packedCharacterClassesSize << std::endl;
+	std::cout << "Output Array Size: " << _content.outputArraySize << std::endl;
+
+	std::cout << "Substitutions:" << std::endl;
+	for (const auto& pair : _content.substitutions) {
+		std::cout << pair.first << " -> " << pair.second << std::endl;
+	}
+
+	std::cout << "Start Conditions:" << std::endl;
+	for (const auto& sc : _content.startConditions) {
+		std::cout << sc.name << " (inclusive: " << (sc.inclusive ? "true" : "false") << ")" << std::endl;
+	}
+
+	std::cout << "Rules:" << std::endl;
+	for (const auto& rule : _content.rules) {
+		std::cout << "Pattern: " << rule.pattern << std::endl;
+		std::cout << "Action: " << rule.action << std::endl;
+		std::cout << "Start Conditions: ";
+		for (const auto& cond : rule.startConditions) {
+			std::cout << cond << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << "User Subroutines Code:" << std::endl;
+	for (const auto& line : _content.userSubroutinesCode) {
+		std::cout << line << std::endl;
+	}
 }
