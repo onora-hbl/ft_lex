@@ -3,7 +3,8 @@ NAME		=	ft_lex
 SRCS		=	\
 				main.cpp \
 				CliArguments.cpp \
-				LexFileParser.cpp
+				LexFileParser.cpp \
+				RegexParser.cpp
 
 _OBJS		=	${SRCS:.cpp=.o}
 OBJS		=	$(addprefix build/, $(_OBJS))

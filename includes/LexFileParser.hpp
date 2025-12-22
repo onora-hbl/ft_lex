@@ -43,6 +43,7 @@ class LexFileParser {
 
 		bool parse();
 
+		Content getContent() const;
 		void show() const;
 
 	private:

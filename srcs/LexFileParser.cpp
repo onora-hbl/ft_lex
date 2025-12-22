@@ -244,6 +244,10 @@ void LexFileParser::handleUserSubroutineLine(const std::string& line) {
 	_content.userSubroutinesCode.push_back(line);
 }
 
+LexFileParser::Content LexFileParser::getContent() const {
+	return _content;
+}
+
 void LexFileParser::show() const {
 	std::cout << "Definitions Code:" << std::endl;
 	for (const auto& line : _content.definitionCode) {

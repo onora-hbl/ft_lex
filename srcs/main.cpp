@@ -1,5 +1,6 @@
 #include "CliArguments.hpp"
 #include "LexFileParser.hpp"
+#include "RegexParser.hpp"
 
 int main(int argc, char **argv) {
 	CliArguments cliArgs(argc, argv);
@@ -12,7 +13,13 @@ int main(int argc, char **argv) {
 	if (!parser.parse()) {
 		return 1;
 	}
-	// parser.show();
+	
+	for (const auto &rules : parser.getContent().rules) {
+		RegexParser regexParser(rules.pattern);
+		if (!regexParser.parse()) {
+			return 1;
+		}
+	}
 
 	return 0;
 }
