@@ -5,12 +5,20 @@
 int line = 1;
 %}
 
-/* ===== Definitions ===== */
 DIGIT      [0-9]
 LETTER     [a-zA-Z]
 ID         {LETTER}({LETTER}|{DIGIT})*
 
+%pointer
+%n 1000
+
+%x COMMENT
+
 %%
+"/*"              BEGIN(COMMENT);
+<COMMENT>"*/"     BEGIN(INITIAL);
+<COMMENT>.|\n     ;
+
 [ \t]+
 \n              { line++; }
 
