@@ -2,6 +2,8 @@
 #include "LexFileParser.hpp"
 #include "RegexParser.hpp"
 
+#include <iostream>
+
 int main(int argc, char **argv) {
 	CliArguments cliArgs(argc, argv);
 	if (!cliArgs.parse()) {
@@ -19,6 +21,8 @@ int main(int argc, char **argv) {
 		if (!regexParser.parse()) {
 			return 1;
 		}
+		regexParser.printTree();
+		std::cout << std::endl;
 	}
 
 	return 0;

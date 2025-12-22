@@ -10,10 +10,6 @@ void freeNode(RegexParser::RegexNode *node) {
 	}
 	switch (node->type) {
 		case RegexParser::ATOM: {
-			RegexParser::AtomNode &atom = std::get<RegexParser::AtomNode>(node->data);
-			if (atom.type == RegexParser::SUB_EXPRESSION && atom.subExpression != nullptr) {
-				freeNode(atom.subExpression);
-			}
 			break;
 		}
 		case RegexParser::CONCATENATION: {
@@ -43,5 +39,239 @@ RegexParser::~RegexParser() {
 
 bool RegexParser::parse() {
 	std::cout << "Parsing regex pattern: " << _pattern << std::endl;
+	_position = 0;
+	_root = parseAlternation();
 	return true;
+}
+
+char RegexParser::peek() const {
+	if (_position < _pattern.size()) {
+		return _pattern[_position];
+	}
+	return '\0';
+}
+
+void RegexParser::consume(char expected) {
+	if (peek() != expected) {
+		throw std::runtime_error(std::string("Expected '") + expected + "', but found '" + peek() + "'");
+	}
+	_position++;
+}
+
+bool RegexParser::canStartAtom(char c) const {
+	return (isalnum(c) || c == '.' || c == '[' || c == '(' || c == '{' || c == '\"');
+}
+
+RegexParser::RegexNode* RegexParser::parseAlternation() {
+	RegexParser::RegexNode* left = this->parseConcatenation();
+
+	while (this->peek() == '|') {
+		this->consume('|');
+		RegexParser::RegexNode* right = this->parseConcatenation();
+
+		left = new RegexParser::RegexNode{RegexParser::ALTERNATION, RegexParser::AlternationNode{left, right}};
+	}
+
+	return left;
+}
+
+RegexParser::RegexNode* RegexParser::parseConcatenation() {
+	RegexParser::RegexNode* left = this->parseQuantifier();
+
+	while (canStartAtom(this->peek())) {
+		RegexParser::RegexNode* right = this->parseQuantifier();
+
+		left = new RegexParser::RegexNode{RegexParser::CONCATENATION, RegexParser::ConcatenationNode{left, right}};
+	}
+
+	return left;
+}
+
+RegexParser::RegexNode* RegexParser::parseQuantifier() {
+	RegexParser::RegexNode* atom = this->parseAtom();
+
+	if (this->peek() == '*') {
+		this->consume('*');
+		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::STAR, -1, -1}};
+	} else if (this->peek() == '+') {
+		this->consume('+');
+		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::PLUS, -1, -1}};
+	} else if (this->peek() == '?') {
+		this->consume('?');
+		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::OPTIONAL, -1, -1}};
+	} else if (this->peek() == '{') {
+		this->consume('{');
+		// parse range
+		while (true) {
+			char c = this->peek();
+			if (c == '}') {
+				this->consume('}');
+				break;
+			}
+			this->consume(c); // consume range content
+		}
+		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::RANGE, 0, 0}}; // TODO
+	}
+
+	return atom;
+}
+
+RegexParser::RegexNode* RegexParser::parseAtom() {
+	if (this->peek() == '(') {
+		this->consume('(');
+		RegexParser::RegexNode* subExpr = this->parseAlternation();
+		this->consume(')');
+		return subExpr;
+	}
+
+	if (this->peek() == '.') {
+		this->consume('.');
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::WILDCARD, "."}};
+	}
+
+	if (this->peek() == '[') {
+		this->consume('[');
+		// parse character class
+		while (true) {
+			char c = this->peek();
+			if (c == ']') {
+				this->consume(']');
+				break;
+			}
+			this->consume(c); // consume character class content
+		}
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::CHARACTER_CLASS, ""}}; // TODO
+	}
+
+	if (this->peek() == '{') {
+		this->consume('{');
+		// parse substitution
+		while (true) {
+			char c = this->peek();
+			if (c == '}') {
+				this->consume('}');
+				break;
+			}
+			this->consume(c); // consume substitution content
+		}
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::SUBSTITUTION, ""}}; // TODO
+	}
+
+	if (this->peek() == '\"') {
+		this->consume('\"');
+		// parse string
+		while (true) {
+			char c = this->peek();
+			if (c == '\"') {
+				this->consume('\"');
+				break;
+			}
+			this->consume(c); // consume string content
+		}
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::STRING, ""}}; // TODO
+	}
+
+	char c = this->peek();
+	this->consume(c);
+	return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::CHARACTER, std::string(1, c)}};
+}
+
+static void printPrefix(int indent) {
+    for (int i = 0; i < indent; ++i)
+        std::cout << "|  ";
+    std::cout << "|- ";
+}
+
+void RegexParser::printNode(const RegexNode* node, int indent) const {
+    if (!node) {
+        printPrefix(indent);
+        std::cout << "(null)\n";
+        return;
+    }
+
+    switch (node->type) {
+
+    case ATOM: {
+        const AtomNode& atom = std::get<AtomNode>(node->data);
+        printPrefix(indent);
+        std::cout << "ATOM ";
+
+        switch (atom.type) {
+        case WILDCARD:
+            std::cout << ".";
+            break;
+        case CHARACTER:
+            std::cout << "'" << atom.value << "'";
+            break;
+        case CHARACTER_CLASS:
+            std::cout << "[" << atom.value << "]";
+            break;
+        case STRING:
+            std::cout << "\"" << atom.value << "\"";
+            break;
+        case SUBSTITUTION:
+            std::cout << "{" << atom.value << "}";
+            break;
+        }
+        std::cout << "\n";
+        break;
+    }
+
+    case CONCATENATION: {
+        const auto& c = std::get<ConcatenationNode>(node->data);
+        printPrefix(indent);
+        std::cout << "CONCAT\n";
+        printNode(c.left, indent + 1);
+        printNode(c.right, indent + 1);
+        break;
+    }
+
+    case ALTERNATION: {
+        const auto& a = std::get<AlternationNode>(node->data);
+        printPrefix(indent);
+        std::cout << "ALT\n";
+        printNode(a.left, indent + 1);
+        printNode(a.right, indent + 1);
+        break;
+    }
+
+    case QUANTIFIER: {
+        const auto& q = std::get<QuantifierNode>(node->data);
+        printPrefix(indent);
+
+        switch (q.quantifierType) {
+        case STAR:
+            std::cout << "STAR\n";
+            break;
+        case PLUS:
+            std::cout << "PLUS\n";
+            break;
+        case OPTIONAL:
+            std::cout << "OPTIONAL\n";
+            break;
+        case RANGE:
+            std::cout << "RANGE {" << q.min << "," << q.max << "}\n";
+            break;
+        case NONE:
+            std::cout << "NONE\n";
+            break;
+        }
+
+        printNode(q.node, indent + 1);
+        break;
+    }
+
+    default:
+        printPrefix(indent);
+        std::cout << "UNKNOWN NODE\n";
+    }
+}
+
+void RegexParser::printTree() const {
+	RegexNode* root = _root;
+	if (root == nullptr) {
+		std::cout << "Empty regex tree." << std::endl;
+		return;
+	}
+	printNode(root);
 }
