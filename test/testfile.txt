@@ -1,3 +1,10 @@
+/*
+   This is a test file
+   if lol == 42
+	  print("Hello, World!")
+   end
+*/
+
 if lol == 42
 	print("Hello, World!")
 end

@@ -15,11 +15,11 @@ ID         {LETTER}({LETTER}|{DIGIT})*
 %x COMMENT
 
 %%
-"/*"              BEGIN(COMMENT);
-<COMMENT>"*/"     BEGIN(INITIAL);
-<COMMENT>.|\n     ;
+"/*"              { BEGIN(COMMENT); printf("COMMENT_START at line %d\n", line); }
+<COMMENT>"*/"     { BEGIN(INITIAL); printf("COMMENT_END at line %d\n", line); }
+<COMMENT>\n       { line++; }
+<COMMENT>.        ;
 
-[ \t]+
 \n              { line++; }
 
 "if"            { printf("IF at line %d\n", line); }
