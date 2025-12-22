@@ -149,5 +149,5 @@ void LexFileParser::handleRuleLine(const std::string& line) {
 }
 
 void LexFileParser::handleUserSubroutineLine(const std::string& line) {
-	std::cout << "Handling user subroutine line: " << line << std::endl;
+	_content.userSubroutinesCode.push_back(line);
 }

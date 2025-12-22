@@ -26,6 +26,10 @@ class LexFileParser {
 			size_t outputArraySize = 6000;
 			std::map<std::string, std::string> substitutions;
 			std::vector<StartCondition> startConditions = { {"INITIAL", true}  };
+
+
+
+			std::vector<std::string> userSubroutinesCode;
 		};
 	
 		LexFileParser(const std::string& filename);
