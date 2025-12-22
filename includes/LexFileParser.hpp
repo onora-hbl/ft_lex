@@ -27,7 +27,13 @@ class LexFileParser {
 			std::map<std::string, std::string> substitutions;
 			std::vector<StartCondition> startConditions = { {"INITIAL", true}  };
 
+			struct Rule {
+				std::string pattern;
+				std::string action;
+				std::vector<std::string> startConditions;
+			};
 
+			std::vector<Rule> rules;
 
 			std::vector<std::string> userSubroutinesCode;
 		};
