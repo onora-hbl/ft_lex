@@ -1,6 +1,7 @@
 #include "RegexParser.hpp"
 
 #include <iostream>
+#include <sstream>
 
 RegexParser::RegexParser(const std::string &pattern) : _pattern(pattern) {}
 
@@ -101,16 +102,26 @@ RegexParser::RegexNode* RegexParser::parseQuantifier() {
 		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::OPTIONAL, -1, -1}};
 	} else if (this->peek() == '{') {
 		this->consume('{');
-		// parse range
+		std::string rangeContent;
 		while (true) {
 			char c = this->peek();
 			if (c == '}') {
 				this->consume('}');
 				break;
 			}
-			this->consume(c); // consume range content
+			rangeContent += c;
+			this->consume(c);
 		}
-		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::RANGE, 0, 0}}; // TODO
+		std::istringstream iss(rangeContent);
+		std::string token;
+		int min = 0, max = 0;
+		if (std::getline(iss, token, ',')) {
+			min = std::stoi(token);
+		}
+		if (std::getline(iss, token)) {
+			max = std::stoi(token);
+		}
+		return new RegexParser::RegexNode{RegexParser::QUANTIFIER, RegexParser::QuantifierNode{atom, RegexParser::RANGE, min, max}};
 	}
 
 	return atom;
@@ -131,44 +142,47 @@ RegexParser::RegexNode* RegexParser::parseAtom() {
 
 	if (this->peek() == '[') {
 		this->consume('[');
-		// parse character class
+		std::string classContent;
 		while (true) {
 			char c = this->peek();
 			if (c == ']') {
 				this->consume(']');
 				break;
 			}
-			this->consume(c); // consume character class content
+			classContent += c;
+			this->consume(c);
 		}
-		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::CHARACTER_CLASS, ""}}; // TODO
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::CHARACTER_CLASS, classContent}};
 	}
 
 	if (this->peek() == '{') {
 		this->consume('{');
-		// parse substitution
+		std::string substitutionContent;
 		while (true) {
 			char c = this->peek();
 			if (c == '}') {
 				this->consume('}');
 				break;
 			}
-			this->consume(c); // consume substitution content
+			substitutionContent += c;
+			this->consume(c);
 		}
-		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::SUBSTITUTION, ""}}; // TODO
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::SUBSTITUTION, substitutionContent}};
 	}
 
 	if (this->peek() == '\"') {
 		this->consume('\"');
-		// parse string
+		std::string stringContent;
 		while (true) {
 			char c = this->peek();
 			if (c == '\"') {
 				this->consume('\"');
 				break;
 			}
-			this->consume(c); // consume string content
+			stringContent += c;
+			this->consume(c);
 		}
-		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::STRING, ""}}; // TODO
+		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::STRING, stringContent}};
 	}
 
 	char c = this->peek();
