@@ -205,79 +205,79 @@ void RegexParser::printNode(const RegexNode* node, int indent) const {
 
     switch (node->type) {
 
-    case ATOM: {
-        const AtomNode& atom = std::get<AtomNode>(node->data);
-        printPrefix(indent);
-        std::cout << "ATOM ";
+		case ATOM: {
+			const AtomNode& atom = std::get<AtomNode>(node->data);
+			printPrefix(indent);
+			std::cout << "ATOM ";
 
-        switch (atom.type) {
-        case WILDCARD:
-            std::cout << ".";
-            break;
-        case CHARACTER:
-            std::cout << "'" << atom.value << "'";
-            break;
-        case CHARACTER_CLASS:
-            std::cout << "[" << atom.value << "]";
-            break;
-        case STRING:
-            std::cout << "\"" << atom.value << "\"";
-            break;
-        case SUBSTITUTION:
-            std::cout << "{" << atom.value << "}";
-            break;
-        }
-        std::cout << "\n";
-        break;
-    }
+			switch (atom.type) {
+			case WILDCARD:
+				std::cout << ".";
+				break;
+			case CHARACTER:
+				std::cout << "'" << atom.value << "'";
+				break;
+			case CHARACTER_CLASS:
+				std::cout << "[" << atom.value << "]";
+				break;
+			case STRING:
+				std::cout << "\"" << atom.value << "\"";
+				break;
+			case SUBSTITUTION:
+				std::cout << "{" << atom.value << "}";
+				break;
+			}
+			std::cout << "\n";
+			break;
+		}
 
-    case CONCATENATION: {
-        const auto& c = std::get<ConcatenationNode>(node->data);
-        printPrefix(indent);
-        std::cout << "CONCAT\n";
-        printNode(c.left, indent + 1);
-        printNode(c.right, indent + 1);
-        break;
-    }
+		case CONCATENATION: {
+			const auto& c = std::get<ConcatenationNode>(node->data);
+			printPrefix(indent);
+			std::cout << "CONCAT\n";
+			printNode(c.left, indent + 1);
+			printNode(c.right, indent + 1);
+			break;
+		}
 
-    case ALTERNATION: {
-        const auto& a = std::get<AlternationNode>(node->data);
-        printPrefix(indent);
-        std::cout << "ALT\n";
-        printNode(a.left, indent + 1);
-        printNode(a.right, indent + 1);
-        break;
-    }
+		case ALTERNATION: {
+			const auto& a = std::get<AlternationNode>(node->data);
+			printPrefix(indent);
+			std::cout << "ALT\n";
+			printNode(a.left, indent + 1);
+			printNode(a.right, indent + 1);
+			break;
+		}
 
-    case QUANTIFIER: {
-        const auto& q = std::get<QuantifierNode>(node->data);
-        printPrefix(indent);
+		case QUANTIFIER: {
+			const auto& q = std::get<QuantifierNode>(node->data);
+			printPrefix(indent);
 
-        switch (q.quantifierType) {
-        case STAR:
-            std::cout << "STAR\n";
-            break;
-        case PLUS:
-            std::cout << "PLUS\n";
-            break;
-        case OPTIONAL:
-            std::cout << "OPTIONAL\n";
-            break;
-        case RANGE:
-            std::cout << "RANGE {" << q.min << "," << q.max << "}\n";
-            break;
-        case NONE:
-            std::cout << "NONE\n";
-            break;
-        }
+			switch (q.quantifierType) {
+			case STAR:
+				std::cout << "STAR\n";
+				break;
+			case PLUS:
+				std::cout << "PLUS\n";
+				break;
+			case OPTIONAL:
+				std::cout << "OPTIONAL\n";
+				break;
+			case RANGE:
+				std::cout << "RANGE {" << q.min << "," << q.max << "}\n";
+				break;
+			case NONE:
+				std::cout << "NONE\n";
+				break;
+			}
 
-        printNode(q.node, indent + 1);
-        break;
-    }
+			printNode(q.node, indent + 1);
+			break;
+		}
 
-    default:
-        printPrefix(indent);
-        std::cout << "UNKNOWN NODE\n";
+		default:
+			printPrefix(indent);
+			std::cout << "UNKNOWN NODE\n";
     }
 }
 
