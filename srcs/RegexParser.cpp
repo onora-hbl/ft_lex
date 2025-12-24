@@ -3,7 +3,8 @@
 #include <iostream>
 #include <sstream>
 
-RegexParser::RegexParser(const std::string &pattern) : _pattern(pattern) {}
+RegexParser::RegexParser(const std::string &pattern, const std::map<std::string, std::string> &substitutions)
+	: _pattern(pattern), _substitutions(substitutions) {}
 
 void freeNode(RegexParser::RegexNode *node) {
 	if (node == nullptr) {
@@ -35,7 +36,7 @@ void freeNode(RegexParser::RegexNode *node) {
 }
 
 RegexParser::~RegexParser() {
-	freeNode(_root);
+	// freeNode(_root);
 }
 
 bool RegexParser::parse() {
@@ -167,7 +168,13 @@ RegexParser::RegexNode* RegexParser::parseAtom() {
 			substitutionContent += c;
 			this->consume(c);
 		}
-		return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::SUBSTITUTION, substitutionContent}};
+		if (_substitutions.find(substitutionContent) == _substitutions.end()) {
+			// TODO improve
+			throw std::runtime_error("Undefined substitution: " + substitutionContent);
+		}
+		RegexParser subParser(_substitutions[substitutionContent], _substitutions);
+		subParser.parse();
+		return subParser.getRoot();
 	}
 
 	if (this->peek() == '\"') {
@@ -188,6 +195,10 @@ RegexParser::RegexNode* RegexParser::parseAtom() {
 	char c = this->peek();
 	this->consume(c);
 	return new RegexParser::RegexNode{RegexParser::ATOM, RegexParser::AtomNode{RegexParser::CHARACTER, std::string(1, c)}};
+}
+
+RegexParser::RegexNode* RegexParser::getRoot() const {
+	return _root;
 }
 
 static void printPrefix(int indent) {
@@ -222,9 +233,6 @@ void RegexParser::printNode(const RegexNode* node, int indent) const {
 				break;
 			case STRING:
 				std::cout << "\"" << atom.value << "\"";
-				break;
-			case SUBSTITUTION:
-				std::cout << "{" << atom.value << "}";
 				break;
 			}
 			std::cout << "\n";

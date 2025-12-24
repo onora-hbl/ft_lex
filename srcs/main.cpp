@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 	}
 	
 	for (const auto &rules : parser.getContent().rules) {
-		RegexParser regexParser(rules.pattern);
+		RegexParser regexParser(rules.pattern, parser.getContent().substitutions);
 		if (!regexParser.parse()) {
 			return 1;
 		}

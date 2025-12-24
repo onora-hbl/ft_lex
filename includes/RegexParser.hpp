@@ -2,10 +2,11 @@
 
 #include <string>
 #include <variant>
+#include <map>
 
 class RegexParser {
 	public:
-		RegexParser(const std::string &pattern);
+		RegexParser(const std::string &pattern, const std::map<std::string, std::string> &substitutions);
 		~RegexParser();
 
 		bool parse();
@@ -14,8 +15,7 @@ class RegexParser {
 			WILDCARD,
 			CHARACTER,
 			CHARACTER_CLASS,
-			STRING,
-			SUBSTITUTION
+			STRING
 		};
 		enum QuantifierType {
 			NONE,
@@ -53,12 +53,15 @@ class RegexParser {
 			NodeType type;
 			std::variant<AtomNode, ConcatenationNode, AlternationNode, QuantifierNode> data;
 		};
+
+		RegexNode* getRoot() const;
 	
 		void printNode(const RegexNode *node, int indent = 0) const;
 		void printTree() const;
 
 	private:
 		std::string _pattern;
+		std::map<std::string, std::string> _substitutions;
 		RegexNode *_root = nullptr;
 		size_t _position = 0;
 
